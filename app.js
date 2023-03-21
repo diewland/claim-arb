@@ -1,0 +1,68 @@
+// https://docs.ethers.org/v6/getting-started/
+let signer = null;
+let provider = null;
+let wallet = null;
+let contract = null;
+let claim_amount = 0;
+
+// connect wallet
+$('.btn-connect').click(async e => {
+  if ($(e.target).hasClass('is-disabled')) return;
+
+  // connect metamask
+  provider = new ethers.BrowserProvider(window.ethereum)
+  signer = await provider.getSigner();
+
+  // recheck arbitrum one network
+  const { chainId } = await provider.getNetwork();
+  if (chainId != BigInt(ARB_CHAIN_ID)) {
+    alert('Switch Metamask Network to [Arbitrum One]');
+    return;
+  }
+
+  // load contract
+  contract = new ethers.Contract(CONTRACT_ADDR, CONTRACT_ABI, signer);
+
+  // show wallet address
+  wallet = signer.address;
+  $('.address').removeClass('d-none');
+  $('.address').html(wallet.substr(0, 5) + '...' + wallet.slice(-4));
+
+  // hide connect button
+  $('.btn-connect').addClass('d-none');
+
+  // show claim, sign-out buttons
+  $('.btn-claim').removeClass('d-none');
+  $('.sign-out').removeClass('d-none');
+
+  // query claim amount
+  contract.getFunction('claimableTokens').staticCall(wallet)
+    .then(amount => {
+      claim_amount = parseInt(amount)/1_000_000_000_000_000_000; //18
+      let txt = claim_amount > 0 ? `Claim ${claim_amount} $ARB` : '$ARB not found';
+      $('.btn-claim').text(txt);
+      $('.btn-claim').removeClass('is-disabled');
+    })
+    .catch(e => { alert(e); })
+});
+
+// claim
+$('.btn-claim').click(e => {
+  let target = e.target;
+  if ($(target).hasClass('is-disabled')) return;
+  if (claim_amount <= 0) return;
+  $(target).addClass('is-disabled');
+  contract.getFunction('claim').send()
+    .then(_ => {
+      alert('Claim Success!')
+    })
+    .catch(e => {
+      alert(e);
+      $(target).removeClass('is-disabled');
+    })
+});
+
+// sign out
+$('.sign-out').click(_ => {
+  location.reload();
+});
