@@ -36,6 +36,7 @@ $('.btn-connect').click(async e => {
   $('.sign-out').removeClass('d-none');
 
   // query claim amount
+  $('.btn-claim').text('Checking $ARB...');
   contract.getFunction('claimableTokens').staticCall(wallet)
     .then(amount => {
       claim_amount = parseInt(amount)/1_000_000_000_000_000_000; //18
@@ -54,7 +55,7 @@ $('.btn-claim').click(e => {
   $(target).addClass('is-disabled');
   contract.getFunction('claim').send()
     .then(_ => {
-      alert('Claim Success!')
+      alert('Claim Success! Check your txn.')
     })
     .catch(e => {
       alert(e);
@@ -64,5 +65,18 @@ $('.btn-claim').click(e => {
 
 // sign out
 $('.sign-out').click(_ => {
-  location.reload();
+  $('.address').addClass('d-none');
+  $('.btn-connect').removeClass('d-none');
+  $('.btn-claim').addClass('d-none');
+  $('.sign-out').addClass('d-none');
 });
+
+// metamask events
+window.ethereum.on('accountsChanged', function (accounts) {
+  $('.sign-out').click();
+  $('.btn-connect').click();
+})
+window.ethereum.on('chainChanged', function (networkId) {
+  $('.sign-out').click();
+  $('.btn-connect').click();
+})
