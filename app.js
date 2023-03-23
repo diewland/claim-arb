@@ -40,7 +40,7 @@ $('.btn-connect').click(async e => {
   contract.getFunction('claimableTokens').staticCall(wallet)
     .then(amount => {
       claim_amount = parseInt(amount)/1_000_000_000_000_000_000; //18
-      let txt = claim_amount > 0 ? `Claim ${claim_amount} $ARB` : '$ARB not found';
+      let txt = claim_amount > 0 ? `Claim ${claim_amount} $ARB` : 'No $ARB to claim';
       $('.btn-claim').text(txt);
       $('.btn-claim').removeClass('is-disabled');
     })
